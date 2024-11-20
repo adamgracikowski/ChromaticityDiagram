@@ -10,7 +10,7 @@ class ChromaticityGUI:
         self.chromaticity_calculator.load_matching_functions(filename)
         self.fig, (self.ax1, self.ax2) = plt.subplots(1, 2, figsize=(12, 6))
         self.ax_slider = plt.axes([0.2, 0.0001, 0.6, 0.03], facecolor='lightgoldenrodyellow')
-        self.degree_slider = Slider(self.ax_slider, 'Degree', 1, 10, valinit=4, valstep=1)
+        self.degree_slider = Slider(self.ax_slider, 'Degree', 1, 30, valinit=n, valstep=1)
         self.degree_slider.on_changed(self.update_degree)
         self.dragging_point = None
         self.control_scatters = None
@@ -69,7 +69,7 @@ class ChromaticityGUI:
         self.plot_cie_diagram()
         self.ax2.set_xlim(0, 1)
         self.ax2.set_ylim(0, 1)
-        self.ax2.set_title("CIE 1931 Chromaticity Diagram")
+        self.ax2.set_title("Chromaticity Diagram")
         self.ax2.set_xlabel("x")
         self.ax2.set_ylabel("y")
         
