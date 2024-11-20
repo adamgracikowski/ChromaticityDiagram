@@ -6,6 +6,10 @@ The project was implemented as a part of the Computer Graphics course at Warsaw 
 
 This tool is designed for educational purposes, helping users understand the relationship between spectral distribution and chromaticity.
 
+<p align="center">
+  <img src="Images/01.PNG"/>
+</p>
+
 ## Features:
 
 - **Interactivity**: User can interactively modify the spectral distribution curve by adjusting the positions of its control points.
@@ -35,11 +39,13 @@ pip install -r requirements.txt
 3. Run the application:
 
 ```bash
-python chromaticity_diagram.py <filename> <degree_of_the_curve>
-```
-
-For example:
-
-```bash
 python chromaticity_diagram.py 'Assets/CIE1931.txt' 6
 ```
+
+<p align="center">
+  <img src="Images/02.PNG"/>
+</p>
+
+<p align="center">
+  <img src="Images/03.PNG"/>
+</p>
