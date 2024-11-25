@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt # type: ignore
 from matplotlib.widgets import Slider # type: ignore
 import matplotlib.image as mpimg
+import numpy as np
 
 from Calculators.ChromaticityCalculator import ChromaticityCalculator
 
@@ -60,6 +61,7 @@ class ChromaticityGUI:
             self.chromaticity_calculator.lambda_min - zoom, 
             self.chromaticity_calculator.lambda_max + zoom
         )
+        self.ax1.set_facecolor((0.94, 0.94, 0.94))
         self.ax1.set_title("Bézier curve")
         self.ax1.set_xlabel("Wavelength (nm)")
         self.ax1.set_ylabel("Amplitude")
@@ -69,11 +71,11 @@ class ChromaticityGUI:
         self.plot_cie_diagram()
         self.ax2.set_xlim(0, 1)
         self.ax2.set_ylim(0, 1)
+        self.ax2.set_facecolor((0.94, 0.94, 0.94))
         self.ax2.set_title("Chromaticity Diagram")
         self.ax2.set_xlabel("x")
         self.ax2.set_ylabel("y")
-        
-        
+            
     def on_button_press(self, event):
         if event.inaxes == self.ax1 and event.button == 1:
             x, y = event.xdata, event.ydata
@@ -93,34 +95,64 @@ class ChromaticityGUI:
             self.dragging_point = None
     
     def plot_cie_diagram(self):
-        img = mpimg.imread('Assets/CIE1931.png')
-        self.ax2.imshow(img, extent=[0, 0.777, 0, 0.834], aspect='auto')
-        # denominator = self.chromaticity_calculator.x + \
-        #     self.chromaticity_calculator.y + \
-        #     self.chromaticity_calculator.z
-        # x = self.chromaticity_calculator.x / denominator
-        # y = self.chromaticity_calculator.y / denominator
-        # wavelengths = self.chromaticity_calculator.wavelengths
+        try:
+            img = mpimg.imread('Assets/CIE1931.png')
+            self.ax2.imshow(img, extent=[0, 0.777, 0, 0.834], aspect='auto')
+        except FileNotFoundError:
+            print("Error: File 'Assets/CIE1931.png' not found. Ensure the path is correct.")
+            return
         
-        # mask = (
-        #     np.isnan(x) | 
-        #     np.isnan(y) | 
-        #     (x <= 0) | 
-        #     (x >= 0.7436) | 
-        #     (y <= 0) | 
-        #     (y >= 1)
-        # )
-
-        # x = x[~mask].tolist()
-        # y = y[~mask].tolist()
-        # wavelengths = wavelengths[~mask]
+        denominator = self.chromaticity_calculator.x + \
+            self.chromaticity_calculator.y + \
+            self.chromaticity_calculator.z
+            
+        mask = denominator > 0
         
-        # colors = plt.cm.plasma(
-        #     (wavelengths - self.chromaticity_calculator.lambda_min) / 
-        #     (self.chromaticity_calculator.lambda_max - self.chromaticity_calculator.lambda_min)
-        # )
+        denominator = denominator[mask]
+        x = self.chromaticity_calculator.x[mask] / denominator
+        y = self.chromaticity_calculator.y[mask] / denominator
+        z = self.chromaticity_calculator.z[mask] / denominator
+        
+        mask = (
+            np.isnan(x) | 
+            np.isnan(y) | 
+            (x <= 0) | 
+            (x >= 0.7436) | 
+            (y <= 0) | 
+            (y >= 1)
+        )
+        
+        x = x[~mask]
+        y = y[~mask]
+        z = z[~mask]
 
-        # self.ax2.scatter(x, y, c=colors, edgecolor='none')
+        colors = [
+            self.convert_xyz_to_rgb(x_val, y_val, z_val)
+            for x_val, y_val, z_val in zip(x, y, z)
+        ]
+        
+        normalized_colors = [
+            (r / 255, g / 255, b / 255) for r, g, b in colors
+        ]
+         
+        self.ax2.scatter(x, y, c=normalized_colors, edgecolor='none', s=10)
+    
+    def convert_xyz_to_rgb(self, x, y, z):
+        r = 3.2410 * x - 1.5374 * y - 0.4986 * z
+        g = -0.9692 * x + 1.8760 * y + 0.0416 * z
+        b = 0.0556 * x - 0.2040 * y + 1.0570 * z
+
+        def gamma_correction(value):
+            if value > 0.0031308:
+                return 1.055 * (value ** (1.0 / 2.4)) - 0.055
+            else:
+                return 12.92 * value
+
+        r = int(max(0, min(1, gamma_correction(r))) * 255)
+        g = int(max(0, min(1, gamma_correction(g))) * 255)
+        b = int(max(0, min(1, gamma_correction(b))) * 255)
+
+        return r, g, b
     
     def update(self):
         self.chromaticity_calculator.curve = self.chromaticity_calculator.generate_bezier_curve(
